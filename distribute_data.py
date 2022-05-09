@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # Distributes data into client_num datasets
-def split_among_clients(X, y, client_num, split_idxs):
+def split_among_clients(X, y, split_idxs):
     clients_X = []
     clients_y = []
     start = 0
@@ -50,11 +50,11 @@ def check_tolerance(idxs, size, tolerance):
 def validate_distribution(split_idxs, N, tolerance, client_num):
     while True:
         if check_tolerance(split_idxs, N, tolerance):
-            print('Distribution satisfies tolerance!')
+            print(f'Distribution satisfies tolerance of {tolerance}!')
             return split_idxs
             break
 
-        print('Distribution did not satisfy the tolerance...')
+        print(f'Distribution did not satisfy the tolerance of {tolerance}...')
         choice = int(input( 'Would you like to:\n\t1) Pick a new tolerance\n\t2) Generate a new distribution\n\t3) Quit\nEnter (1, 2, 3): '))
 
         if choice == 1:
@@ -82,7 +82,7 @@ def generate_mnist_client_data(client_num = 10, tolerance = 2000, test_size = 0.
 
     assert type(split_idxs) != int
 
-    client_X, client_y = split_among_clients(X, y, client_num, split_idxs)
+    client_X, client_y = split_among_clients(X, y, split_idxs)
 
     # For each client, split data into train and test sets
     client_train_data = []
@@ -97,3 +97,4 @@ def generate_mnist_client_data(client_num = 10, tolerance = 2000, test_size = 0.
         client_test_labels.append(y_test)
 
     return {'Client Train Data': client_train_data, 'Client Train Labels':  client_train_labels, 'Client Test Data': client_test_data, 'Client Test Labels': client_test_labels}
+
