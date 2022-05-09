@@ -1,32 +1,17 @@
-# %% 1-Client Adversarial Stealth Detection (1-CLient ASD)
+# %% Splitting up the data among the clients
 import numpy as np
 
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.metrics import categorical_crossentropy
 from tensorflow.keras.utils import to_categorical
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-# %%
-X, y = fetch_openml('mnist_784', version = 1, return_X_y = True, as_frame = False)
-
-# %%
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.33, random_state = 20)
-X_train = X_train.reshape((X_train.shape[0], 28, 28, 1))
-X_test = X_test.reshape((X_test.shape[0], 28, 28, 1))
-y_train = to_categorical(y_train.astype('int64'), 10)
-y_test = to_categorical(y_test.astype('int64'), 10)
-
-# %% add a tolerance distance between idxs
-def split_amongst_clients(X, y, client_num):
-    #np.random.seed(5)
-    split_idx = np.random.uniform(0, X.shape[0], client_num - 1)
-    split_idx = np.sort(split_idx).astype('int64')
-
+# Distributes data into client_num datasets
+def split_among_clients(X, y, client_num, split_idxs):
     clients_X = []
     clients_y = []
     start = 0
-    for end in split_idx:
+    for end in split_idxs:
         data = X[start : end]
         labels = y[start : end]
 
@@ -39,18 +24,76 @@ def split_amongst_clients(X, y, client_num):
     labels = y[start:]
 
     clients_X.append(data)
-    clients_y.append(data)
+    clients_y.append(labels)
 
-    return split_idx, clients_X, clients_y
+    return clients_X, clients_y
 
-# %%
-_, clients_train_X, clients_train_y = split_amongst_clients(X_train, y_train, 10)
-_, clients_test_X, clients_test_y = split_amongst_clients(X_test, y_test, 10)
+# Z-normalizes data
+def normalize(X):
+    scaler = StandardScaler().fit(X)
+    return scaler.transform(X)
 
-# %%
-for i in range(len(clients_train_X)):
-    print(clients_train_X[i].shape)
-    print(clients_train_y[i].shape)
+# Checks if each client has more than tolerance samples
+def check_tolerance(idxs, size, tolerance):
+    start = 0
+    for idx in idxs:
+        if (idx - start) <= tolerance:
+            return False
+        start = idx
 
+    if (size - start) < tolerance:
+        return False
+    else:
+        return True
 
-# %%
+# Suggests options if tolerance not met
+def validate_distribution(split_idxs, N, tolerance, client_num):
+    while True:
+        if check_tolerance(split_idxs, N, tolerance):
+            print('Distribution satisfies tolerance!')
+            return split_idxs
+            break
+
+        print('Distribution did not satisfy the tolerance...')
+        choice = int(input( 'Would you like to:\n\t1) Pick a new tolerance\n\t2) Generate a new distribution\n\t3) Quit\nEnter (1, 2, 3): '))
+
+        if choice == 1:
+            tolerance = int(input('What tolerance would you like? '))
+        elif choice == 2:
+            split_idxs = np.random.uniform(0, N, client_num - 1)
+            split_idxs = np.sort(split_idxs).astype('int64')
+        else:
+            return -1
+
+# Generates the federated dataset
+def generate_mnist_client_data(client_num = 10, tolerance = 2000, test_size = 0.25):
+    X, y = fetch_openml('mnist_784', version = 1, return_X_y = True, as_frame = False)
+    N = X.shape[0]
+
+    # Data preparation
+    X = normalize(X)
+    X = X.reshape(X.shape[0], 28, 28, 1)
+    y = to_categorical(y.astype('int64'), 10)
+
+    # Defining data split
+    split_idxs = np.random.uniform(0, N, client_num - 1)
+    split_idxs = np.sort(split_idxs).astype('int64')
+    split_idxs = validate_distribution(split_idxs, N, tolerance, client_num)
+
+    assert type(split_idxs) != int
+
+    client_X, client_y = split_among_clients(X, y, client_num, split_idxs)
+
+    # For each client, split data into train and test sets
+    client_train_data = []
+    client_train_labels = []
+    client_test_data = []
+    client_test_labels = []
+    for i in range(len(client_X)):
+        X_train, X_test, y_train, y_test = train_test_split(client_X[i], client_y[i], test_size = test_size)
+        client_train_data.append(X_train)
+        client_test_data.append(X_test)
+        client_train_labels.append(y_train)
+        client_test_labels.append(y_test)
+
+    return {'Client Train Data': client_train_data, 'Client Train Labels':  client_train_labels, 'Client Test Data': client_test_data, 'Client Test Labels': client_test_labels}
