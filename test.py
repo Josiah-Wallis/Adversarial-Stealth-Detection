@@ -10,20 +10,21 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import categorical_crossentropy
 from tensorflow.keras.utils import to_categorical
 from distribute_data import generate_mnist_client_data
-from asd import FedAvg
+from asd import FedAvg, generate_model
 
 
 # %%
-bunch = generate_mnist_client_data()
+pkg = generate_mnist_client_data()
 
 # %%
-w, b = FedAvg(pkg['Client Train Data'], pkg['Client Train Labels'], rounds = 50)
+w, b = FedAvg(pkg['Client Train Data'], pkg['Client Train Labels'], rounds = 10)
 
 # %%
 model = generate_model(w, b, [0, 2, 5])
 
 # %%
 model.compile(optimizer = Adam(learning_rate = 0.01), loss = 'categorical_crossentropy', metrics = ['accuracy'])
-model.fit(pkg['Client Train Data'][0], pkg['Client Train Labels'][0], validation_split = 0.2, batch_size = 100, epochs = 5, verbose = 2, use_multiprocessing = True)
 
+# %%
+model.evaluate(pkg['Client Test Data'][0], pkg['Client Test Labels'][0])
 # %%
