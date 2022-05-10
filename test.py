@@ -12,12 +12,34 @@ from tensorflow.keras.utils import to_categorical
 from distribute_data import generate_mnist_client_data
 from asd import FedAvg, generate_model
 
+from copy import deepcopy
+
+
 
 # %%
 pkg = generate_mnist_client_data()
 
 # %%
-w, b = FedAvg(pkg['Client Train Data'], pkg['Client Train Labels'], rounds = 10)
+
+def create_adversary(client_train_labels, client, true, target):
+    adv_labels = deepcopy(client_train_labels)
+    num_labels = len(adv_labels[0][0])
+    target_label = to_categorical(target, num_labels)
+
+    rev_one_hot = np.argmax(adv_labels[client], axis = 1)
+    adv_labels[client][rev_one_hot == true] = target_label
+    return adv_labels
+
+# %%
+adv_labels = create_adversary(bunch['Client Train Labels'], 3, 4, 9)
+
+# %%
+np.sum(adv_labels[3] != bunch['Client Train Labels'][3])
+
+# %%
+#w, b = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 50)
+w, b = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 20)
+
 
 # %%
 model = generate_model(w, b, [0, 2, 5])
@@ -26,5 +48,5 @@ model = generate_model(w, b, [0, 2, 5])
 model.compile(optimizer = Adam(learning_rate = 0.01), loss = 'categorical_crossentropy', metrics = ['accuracy'])
 
 # %%
-model.evaluate(pkg['Client Test Data'][0], pkg['Client Test Labels'][0])
-# %%
+model.evaluate(bunch['Client Test Data'][0], bunch['Client Test Labels'][0], use_multiprocessing = True)
+
