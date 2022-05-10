@@ -11,7 +11,6 @@ from tensorflow.keras.metrics import categorical_crossentropy
 from distribute_data import generate_mnist_client_data
 from joblib import Parallel, delayed
 
-# Generalize later
 # Initializes weights for FedAvg according to CNN parameters
 def initialize_weights(ref_model):
     w = []
@@ -28,14 +27,6 @@ def initialize_weights(ref_model):
         w.append(np.random.standard_normal(w_shape))
         b.append(np.random.standard_normal(b_shape))
 
-    '''
-    w.append(np.random.randn(3, 3, 1, 8))
-    b.append(np.random.randn(8))
-    w.append(np.random.randn(3, 3, 8, 16))
-    b.append(np.random.randn(16))
-    w.append(np.random.randn(784, 10))
-    b.append(np.random.randn(10))
-    '''
 
     return w, b
 
