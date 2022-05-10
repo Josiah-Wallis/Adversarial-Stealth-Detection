@@ -48,22 +48,20 @@ def check_tolerance(idxs, size, tolerance):
 
 # Suggests options if tolerance not met
 def validate_distribution(split_idxs, N, tolerance, client_num):
+    count = 0
     while True:
         if check_tolerance(split_idxs, N, tolerance):
-            print(f'Distribution satisfies tolerance of {tolerance}!')
             return split_idxs
             break
+        else:
+            count += 1
 
-        print(f'Distribution did not satisfy the tolerance of {tolerance}...')
-        choice = int(input( 'Would you like to:\n\t1) Pick a new tolerance\n\t2) Generate a new distribution\n\t3) Quit\nEnter (1, 2, 3): '))
+            if count == 50:
+                print('The program is having trouble fitting the specified tolerance.\nPlease try a smaller tolernace. Exiting with error code -1...')
+                return -1
 
-        if choice == 1:
-            tolerance = int(input('What tolerance would you like? '))
-        elif choice == 2:
             split_idxs = np.random.uniform(0, N, client_num - 1)
             split_idxs = np.sort(split_idxs).astype('int64')
-        else:
-            return -1
 
 # Generates the federated dataset
 def generate_mnist_client_data(client_num = 10, tolerance = 2000, test_size = 0.25):
