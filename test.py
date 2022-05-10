@@ -35,7 +35,7 @@ np.sum(adv_labels[3] != bunch['Client Train Labels'][3])
 
 # %%
 #w, b = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 50)
-w, b = FedAvg(bunch['Client Train Data'], bunch['Client Train Labels'], rounds = 50)
+w, b = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 20)
 
 # %%
 model = generate_model(w, b, [0, 2, 5])
