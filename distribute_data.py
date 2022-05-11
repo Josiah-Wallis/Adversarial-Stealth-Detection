@@ -6,6 +6,16 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+# Creates a single adversarial client (targeted)
+def create_adversary(client_train_labels, client, true, target):
+    adv_labels = deepcopy(client_train_labels)
+    num_labels = len(adv_labels[0][0])
+    target_label = to_categorical(target, num_labels)
+
+    rev_one_hot = np.argmax(adv_labels[client], axis = 1)
+    adv_labels[client][rev_one_hot == true] = target_label
+    return adv_labels
+
 # Distributes data into client_num datasets
 def split_among_clients(X, y, split_idxs):
     clients_X = []
@@ -56,7 +66,7 @@ def validate_distribution(split_idxs, N, tolerance, client_num):
         else:
             count += 1
 
-            if count == 50:
+            if count == 500:
                 print('The program is having trouble fitting the specified tolerance.\nPlease try a smaller tolernace. Exiting with error code -1...')
                 return -1
 
