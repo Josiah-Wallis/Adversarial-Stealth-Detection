@@ -5,6 +5,7 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from copy import deepcopy
 
 # Creates a single adversarial client (targeted)
 def create_adversary(client_train_labels, client, true, target):

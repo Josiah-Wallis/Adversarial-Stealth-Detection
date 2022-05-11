@@ -86,6 +86,11 @@ def FedAvg(client_train_data, client_train_labels, batch_size = 100, epochs = 5,
     m = max(int(frac_clients * K), 1)
     client_set = range(K)
 
+    ws = []
+    ws.append(w)
+    bs = []
+    bs.append(b)
+
     n_k = []
     for x in client_train_data:
         n_k.append(x.shape[0])
@@ -106,5 +111,7 @@ def FedAvg(client_train_data, client_train_labels, batch_size = 100, epochs = 5,
             w_updates[k], b_updates[k] = ClientUpdate(client_train_data[k], client_train_labels[k], w, b, batch_size, epochs, learning_rate, trainable_layers)
 
         w, b = aggregate(w_updates, b_updates, n_k, S_t)
+        ws.append(w)
+        bs.append(b)
         
-    return w, b
+    return w, b, ws, bs
