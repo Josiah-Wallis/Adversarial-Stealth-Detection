@@ -1,4 +1,4 @@
-# %% 1-Client Adversarial Stealth Detection (1-CLient ASD)
+# %% 1-Client Adversarial Stealth Detection (1-CLient ASD) - test run via ipython notebook
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,26 +9,11 @@ from tensorflow import keras
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import categorical_crossentropy
 from tensorflow.keras.utils import to_categorical
-from distribute_data import generate_mnist_client_data
+from distribute_data import generate_mnist_client_data, create_adversary
 from asd import FedAvg, generate_model
 
-from copy import deepcopy
-
-
-
 # %%
-pkg = generate_mnist_client_data()
-
-# %%
-
-def create_adversary(client_train_labels, client, true, target):
-    adv_labels = deepcopy(client_train_labels)
-    num_labels = len(adv_labels[0][0])
-    target_label = to_categorical(target, num_labels)
-
-    rev_one_hot = np.argmax(adv_labels[client], axis = 1)
-    adv_labels[client][rev_one_hot == true] = target_label
-    return adv_labels
+bunch = generate_mnist_client_data()
 
 # %%
 adv_labels = create_adversary(bunch['Client Train Labels'], 3, 4, 9)
