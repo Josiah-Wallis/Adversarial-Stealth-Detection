@@ -16,6 +16,8 @@ class Datasets:
             self.dataset = cifar10.load_data()
         elif self.dataset_name == 'fashion':
             self.dataset = fashion_mnist.load_data()
+
+        #self.seed = seed
     
     # Creates a single adversarial client (targeted)
     def create_adversary(self, client_train_labels, client, true, target):
@@ -77,10 +79,11 @@ class Datasets:
             else:
                 count += 1
 
-                if count == 500:
+                if count == 1000:
                     print('The program is having trouble fitting the specified tolerance.\nPlease try a smaller tolernace. Exiting with error code -1...')
                     return -1
 
+                #np.random.seed(self.seed)
                 split_idxs = np.random.uniform(0, N, client_num - 1)
                 split_idxs = np.sort(split_idxs).astype('int32')
 
@@ -106,6 +109,7 @@ class Datasets:
         y = to_categorical(y.astype('int32'), 10)
 
         # Defining data split
+        #np.random.seed(self.seed)
         split_idxs = np.random.uniform(0, N, client_num - 1)
         split_idxs = np.sort(split_idxs).astype('int32')
         split_idxs = self.validate_distribution(split_idxs, N, tolerance, client_num)
