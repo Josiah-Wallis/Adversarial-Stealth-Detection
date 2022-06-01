@@ -10,7 +10,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import categorical_crossentropy
 from tensorflow.keras.utils import to_categorical
 from distribute_data import generate_mnist_client_data, create_adversary
-from asd import FedAvg, generate_model
+from fedavg import FedAvg, generate_model
 
 # %%
 def test_acc(ws, bs, test_data, test_labels):
@@ -37,13 +37,13 @@ adv_labels = create_adversary(bunch['Client Train Labels'], 3, 4, 9)
 
 # %%
 #w, b = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 50)
-w, b, ws, bs = FedAvg(bunch['Client Train Data'], bunch['Client Train Labels'], rounds = 55)
+w, b, ws, bs, tally = FedAvg(bunch['Client Train Data'], bunch['Client Train Labels'], rounds = 55)
 
 # %%
 r55_standard_test_acc = test_acc(ws, bs, test_data, test_labels)
 
 # %%
-w, b, ws, bs = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 55)
+w, b, ws, bs, tally = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 55)
 
 # %%
 r55_adv_test_acc = test_acc(ws, bs, test_data, test_labels)
