@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from copy import deepcopy
 
 class Datasets:
-    def __init__(self, dataset_name):
+    def __init__(self, dataset_name = None):
         self.dataset_name = dataset_name
         if self.dataset_name == 'fashion':
             self.dataset = fashion_mnist.load_data()
