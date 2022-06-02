@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.datasets import fashion_mnist, cifar10
+from tensorflow.keras.datasets import fashion_mnist, mnist
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from copy import deepcopy
@@ -12,12 +12,11 @@ from copy import deepcopy
 class Datasets:
     def __init__(self, dataset_name):
         self.dataset_name = dataset_name
-        if self.dataset_name == 'cifar':
-            self.dataset = cifar10.load_data()
-        elif self.dataset_name == 'fashion':
+        if self.dataset_name == 'fashion':
             self.dataset = fashion_mnist.load_data()
+        elif self.dataset_name == 'digits':
+            self.dataset = mnist.load_data()
 
-        #self.seed = seed
     
     # Creates a single adversarial client (targeted)
     def create_adversary(self, client_train_labels, client, true, target):
@@ -79,11 +78,10 @@ class Datasets:
             else:
                 count += 1
 
-                if count == 1000:
+                if count == 10000:
                     print('The program is having trouble fitting the specified tolerance.\nPlease try a smaller tolernace. Exiting with error code -1...')
                     return -1
 
-                #np.random.seed(self.seed)
                 split_idxs = np.random.uniform(0, N, client_num - 1)
                 split_idxs = np.sort(split_idxs).astype('int32')
 
@@ -109,7 +107,6 @@ class Datasets:
         y = to_categorical(y.astype('int32'), 10)
 
         # Defining data split
-        #np.random.seed(self.seed)
         split_idxs = np.random.uniform(0, N, client_num - 1)
         split_idxs = np.sort(split_idxs).astype('int32')
         split_idxs = self.validate_distribution(split_idxs, N, tolerance, client_num)

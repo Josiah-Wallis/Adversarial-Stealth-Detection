@@ -8,8 +8,6 @@ from keras.models import Sequential, clone_model
 from keras.layers import Dense, Flatten, Conv2D, MaxPool2D
 from keras.optimizers import Adam
 from keras.metrics import categorical_crossentropy
-from keras.utils import set_random_seed
-from keras.backend import clear_session
 from distribute_data import Datasets
 
 from asd import *
@@ -122,32 +120,22 @@ def FedAvg(client_train_data, client_train_labels, batch_size = 100, epochs = 5,
     return w, b, ws, bs, tally
 
 class FederatedSystem:
-    def __init__(self, dataset_name, seed = 50, client_num = 10, tolerance = 2000, test_size = 0.25):
+    def __init__(self, dataset_name, client_num = 10, tolerance = 2000, test_size = 0.25):
         self.dataset_name = dataset_name
-        set_random_seed(seed)
-        if self.dataset_name == 'cifar':
-            self.metadata = Datasets('cifar')
-            self.data = self.metadata.generate_data(client_num, tolerance, test_size)
-            self.model = Sequential([
-                Conv2D(filters = 32, kernel_size = (3, 3), activation = 'relu', padding = 'same', input_shape = (32, 32, 3)),
-                MaxPool2D(pool_size = (2, 2), strides = 2),
-                Conv2D(filters = 32, kernel_size = (3, 3), activation = 'relu', padding = 'same'),
-                MaxPool2D(pool_size = (2, 2), strides = 2),
-                Flatten(),
-                Dense(units = 10, activation = 'softmax')
-            ])
-
-        elif self.dataset_name == 'fashion':
-            self.metadata = Datasets('fashion')
-            self.data = self.metadata.generate_data(client_num, tolerance, test_size)
-            self.model = Sequential([
-                Conv2D(filters = 8, kernel_size = (3, 3), activation = 'relu', padding = 'same', input_shape = (28, 28, 1)),
-                MaxPool2D(pool_size = (2, 2), strides = 2),
-                Conv2D(filters = 16, kernel_size = (3, 3), activation = 'relu', padding = 'same'),
-                MaxPool2D(pool_size = (2, 2), strides = 2),
-                Flatten(),
-                Dense(units = 10, activation = 'softmax')
-            ])
+        if self.dataset_name == 'fashion' or self.dataset_name == 'digits':
+            if self.dataset_name == 'fashion':
+                self.metadata = Datasets('fashion')
+            else:
+                self.metadata = Datasets('digits')
+        self.data = self.metadata.generate_data(client_num, tolerance, test_size)
+        self.model = Sequential([
+            Conv2D(8, kernel_size = (3, 3), activation = 'relu', padding = 'same', input_shape = (28, 28, 1)),
+            MaxPool2D((2, 2), strides = 2),
+            Conv2D(16, kernel_size = (3, 3), activation = 'relu', padding = 'same'),
+            MaxPool2D(pool_size = (2, 2), strides = 2),
+            Flatten(),
+            Dense(10, activation = 'softmax')
+        ])
         
         self.client_train_data = self.data['Client Train Data']
         self.client_train_labels = self.data['Client Train Labels']
@@ -175,8 +163,7 @@ class FederatedSystem:
 
     # Generates CNN with 2 convolutional layers and a dense layer. Initializes weights with passed w, b
     def generate_model(self, w, b, skip = 0):
-        clear_session()
-        model = self.model
+        model = clone_model(self.model)
 
         if not skip:
             for i, x in enumerate(self.trainable_layers):
@@ -185,10 +172,10 @@ class FederatedSystem:
         return model
 
     # Trains CNN locally and returns weight updates
-    def ClientUpdate(self, X, y, w, b, B, E, learning_rate):
+    def ClientUpdate(self, X, y, w, b, E):
         model = self.generate_model(w, b)
-        model.compile(optimizer = Adam(learning_rate = learning_rate), loss = 'categorical_crossentropy', metrics = ['accuracy'])
-        model.fit(X, y, validation_split = 0.2, batch_size = B, epochs = E, verbose = 0, use_multiprocessing = True)
+        model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
+        model.fit(X, y, validation_split = 0.2, epochs = E, use_multiprocessing = True)
 
         w = []
         b = []
@@ -216,7 +203,7 @@ class FederatedSystem:
         return w, b
 
     # Standard Federated Averaging for CNN
-    def FedAvg(self, batch_size = 50, epochs = 5, learning_rate = 0.001, frac_clients = 1, rounds = 20):
+    def FedAvg(self, epochs = 5, frac_clients = 1, rounds = 20):
         trainable_layers = []
         for i, x in enumerate(self.model.layers):
             if x.weights:
@@ -248,7 +235,7 @@ class FederatedSystem:
             S_t = sample(client_set, m)
 
             for k in S_t:
-                w_updates[k], b_updates[k] = self.ClientUpdate(self.client_train_data[k], self.client_train_labels[k], w, b, batch_size, epochs, learning_rate)
+                w_updates[k], b_updates[k] = self.ClientUpdate(self.client_train_data[k], self.client_train_labels[k], w, b, epochs)
 
             asd_cancel(w_updates, b_updates, tally)
             w, b = self.aggregate(w_updates, b_updates, n_k, S_t)
@@ -273,7 +260,7 @@ class FederatedSystem:
 
         for t in range(T):
             model = self.generate_model(self.w_history[t], self.b_history[t])
-            model.compile(optimizer = Adam(learning_rate = 0.01), loss = 'categorical_crossentropy', metrics = ['accuracy'])
+            model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
             loss, acc = model.evaluate(test_data, test_labels, verbose = 0, use_multiprocessing = True)
             test_accs.append(acc)
             test_losses.append(loss)
