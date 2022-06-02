@@ -9,7 +9,7 @@ from tensorflow import keras
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import categorical_crossentropy
 from tensorflow.keras.utils import to_categorical
-from distribute_data import generate_mnist_client_data, create_adversary
+from distribute_data import Datasets
 from fedavg import FedAvg, generate_model
 
 # %%
@@ -26,7 +26,7 @@ def test_acc(ws, bs, test_data, test_labels):
     return test_accs
 
 # %%
-bunch = generate_mnist_client_data()
+bunch = Datasets('fashion').generate_data()
 
 # %%
 test_data = np.concatenate([x for x in bunch['Client Test Data']])
@@ -37,10 +37,11 @@ adv_labels = create_adversary(bunch['Client Train Labels'], 3, 4, 9)
 
 # %%
 #w, b = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 50)
-w, b, ws, bs, tally = FedAvg(bunch['Client Train Data'], bunch['Client Train Labels'], rounds = 55)
+w, b, ws, bs, tally = FedAvg(bunch['Client Train Data'], bunch['Client Train Labels'], rounds = 3)
 
 # %%
 r55_standard_test_acc = test_acc(ws, bs, test_data, test_labels)
+plt.plot([0, 1, 2, 3], r55_standard_test_acc)
 
 # %%
 w, b, ws, bs, tally = FedAvg(bunch['Client Train Data'], adv_labels, rounds = 55)

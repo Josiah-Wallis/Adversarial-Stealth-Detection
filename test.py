@@ -1,41 +1,21 @@
 # %% 1-Client Adversarial Stealth Detection (1-CLient ASD) - test run via ipython notebook
+from distribute_data import Datasets
+from fedavg import FederatedSystem
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import random
-
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.metrics import categorical_crossentropy
-from tensorflow.keras.utils import to_categorical
-from distribute_data import generate_mnist_client_data, create_adversary
-from fedavg import FedAvg, generate_model
-from tensorflow.keras.datasets import fashion_mnist
+from keras.models import Sequential, clone_model
+from keras.layers import Dense, Flatten, Conv2D, MaxPool2D
+from keras.optimizers import Adam
 
 from asd import *
+
 # %%
-x = fashion_mnist.load_data()
+model = FederatedSystem('fashion', tolerance = 3000)
 # %%
-x
+w, b, tally = model.FedAvg(rounds = 20)
+
 # %%
-type(x)
+test_accs, test_losses = model.test_acc()
 # %%
-len(x)
-# %%
-thing = x[0]
-# %%
-other = x[1]
-# %%
-thing
-# %%
-other
-# %%
-type(thing[0])
-# %%
-data = pd.read_csv('adult.data', sep = ',', header = None)
-# %%
-data
-# %%
-data[14][50]
+x = range(21)
+plt.plot(x, test_accs, color = 'blue', marker = 's')
 # %%
