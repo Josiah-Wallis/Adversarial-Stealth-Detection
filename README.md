@@ -11,7 +11,7 @@ In my tests, I use the [Fashion MNIST][fashion] and regular [MNIST][mnist] datas
 
 ### Usage
 To get started creating adversaries and capturing tallies, below outlines a typical setup:
-```
+```python
 from distribute_data import Datasets
 from fedsys import FederatedSystem
 
