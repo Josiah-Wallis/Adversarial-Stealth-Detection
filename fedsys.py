@@ -253,9 +253,12 @@ class FederatedSystem:
                     b_updates.append(b_temp)
                 else:
                     w_updates[k], b_updates[k] = w_temp, b_temp
-                    
+            
+            # Tally clients before threshold round
             if t <= (threshold - 1):
                 qClients = asd_cancel(w_updates, b_updates, tally)
+                
+            # At threshold round, remove client with most tallies
             if (enable == 1) and (t == (threshold - 1)):
                 bad_client = tally.index(max(tally))
                 client_set = [i for i in client_set if i != bad_client]
