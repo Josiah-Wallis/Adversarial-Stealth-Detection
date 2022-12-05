@@ -43,7 +43,7 @@ Shown above are validation accuracy comparisons with FedAvg ASD enabled on the F
 The impact of ASD should be further studied as the results may be due to a plethora of circumstances. The curse of dimensionality manifests itself still due to a loss of information dropping from thousand dimensional spaces down to hundreds or tens of dimensions. Also, ASD is sensitive to client updates from clients with a much greater sample size with respect to other clients. From a theoretical standpoint, there is promise.
 
 # Contact
-Please send any questions, comments, or inquiries to jwall014@ucr.edu. A paper rough draft with mathematical details an further discussion may be found [here][my paper].
+Please send any questions, comments, or inquiries to jwall014@ucr.edu. A paper rough draft with mathematical details an further discussion may be found [here][my paper]. Please note that the paper formatting says it is published although it is **not** a published or submitted paper. It is a draft written for practice and educational/academic purposes only, and any statements of publication on the paper are written in by the LaTeX formatting.
 
 [model poisoning]: <https://arxiv.org/abs/1811.12470>
 
